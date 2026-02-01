@@ -10,29 +10,27 @@ class UrlTest {
     private val timeout = 5000
 
     suspend fun doTest(profile: ProxyEntity): Int {
-        var bestPing = Int.MAX_VALUE // فرض اولیه: بدترین پینگ ممکن
-        var isSuccess = false
-        val testCount = 6 // تعداد دفعات تست (درخواست شما)
+        var totalPing: Long = 0 // مجموع پینگ‌ها
+        var successCount = 0    // تعداد تست‌های موفق
+        val testCount = 10      // تعداد کل تست‌ها
 
         repeat(testCount) {
-            // انجام تست تکی
             val result = TestInstance(profile, link, timeout).doTest()
 
-            // اگر نتیجه معتبر بود (بزرگتر از ۰ معمولا یعنی موفقیت)
             if (result > 0) {
-                isSuccess = true
-                if (result < bestPing) {
-                    bestPing = result // اگر پینگ جدید کمتر بود، آن را ذخیره کن
-                }
+                totalPing += result // جمع کردن پینگ فعلی با کل
+                successCount++      // اضافه کردن به شمارنده موفق‌ها
             }
-
-            // (اختیاری) تاخیر کوتاه ۵۰ میلی‌ثانیه‌ای بین تست‌ها برای دقت بیشتر
-            // اگر نمی‌خواهید می‌توانید خط زیر را حذف کنید
-            delay(50)
+            
+            // تاخیر کوتاه بین تست‌ها
+            if (it < testCount - 1) delay(20)
         }
 
-        // اگر حداقل یک تست موفق بود، بهترین پینگ را برگردان، وگرنه -1 (یا 0 بسته به منطق برنامه)
-        return if (isSuccess) bestPing else -1
+        // محاسبه میانگین: مجموع تقسیم بر تعداد
+        return if (successCount > 0) {
+            (totalPing / successCount).toInt()
+        } else {
+            -1 // اگر هیچ تستی موفق نبود
+        }
     }
-
 }
